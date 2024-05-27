@@ -1,40 +1,27 @@
 print("Welcome to my computer quiz!")
 
-playing = input("Do you want to play? ")
+playing = input("Do you want to play? ").lower()
 
-if playing.lower() != "yes":
+if playing != "yes":
     quit()
 
-print("Okay lets play :)")
+print("Okay, let's play :)")
 score = 0
 
-answer = input("What does CPU stands for? ")
-if answer.lower() == "central processing unit":
-    print("Correct!")
-    score += 1
-else:
-    print("Incorrect!")
+qa_pairs = {
+    "What does CPU stands for? ":"central processing unit",
+    "What does GPU stands for? ":"graphics processing unit",
+    "What does RAM stands for? ":"random access memory",
+    "What does PSU stands for? ":"power supply"
+    }
 
-answer = input("What does GPU stands for? ")
-if answer.lower() == "graphics processing unit":
-    print("Correct!")
-    score += 1
-else:
-    print("Incorrect!")
+for question, correct_answer in qa_pairs.items():   
+    answer = input(question).lower()
+    if answer == correct_answer:
+        print("Correct!")
+        score += 1
+    else:
+        print("Incorrect!")
 
-answer = input("What does RAM stands for? ")
-if answer.lower() == "random access memory":
-    print("Correct!")
-    score += 1
-else:
-    print("Incorrect!")
-
-answer = input("What does PSU stands for? ")
-if answer.lower() == "power supply":
-    print("Correct!")
-    score += 1
-else:
-    print("Incorrect!")
-
-print("You got " + str(score) + " questions correct!")
-print("You got " + str((score/4) * 100) + "%.")
+print(f"You got {score} questions correct!")
+print(f"You got {(score/len(qa_pairs)) * 100} %.")
