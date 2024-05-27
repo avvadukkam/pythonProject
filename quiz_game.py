@@ -12,7 +12,8 @@ qa_pairs = {
     "What does CPU stands for? ":"central processing unit",
     "What does GPU stands for? ":"graphics processing unit",
     "What does RAM stands for? ":"random access memory",
-    "What does PSU stands for? ":"power supply"
+    "What does PSU stands for? ":"power supply",
+    "What is WWW stands for? ": "world wide web"
     }
 
 for question, correct_answer in qa_pairs.items():   
