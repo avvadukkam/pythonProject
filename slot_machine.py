@@ -7,8 +7,9 @@ MIN_BET = 1
 
 ROWS = 3
 COLS = 3
-symbol_count = { "A": 2, "B": 4, "C": 6, "D": 8}
-symbol_value = { "A": 5, "B": 4, "C": 3, "D": 2}
+symbol_count = {"A": 2, "B": 4, "C": 6, "D": 8}
+symbol_value = {"A": 5, "B": 4, "C": 3, "D": 2}
+
 
 def check_winning(columns, lines, bet, values):
     winnings = 0
@@ -23,6 +24,7 @@ def check_winning(columns, lines, bet, values):
             winnings += values[symbol] * bet
             winning_lines.append(line + 1)
     return winnings, winning_lines
+
 
 def get_slot_machine_spin(rows, cols, symbols):
     all_symbols = []
@@ -100,9 +102,11 @@ def spin(balance):
     while True:
         bet = get_bet()
         total_bet = lines * bet
-        
+
         if total_bet > balance:
-            print(f"You do not have enough to bet that amount, your current balance is ${balance}.")
+            print(
+                f"You do not have enough to bet that amount, your current balance is ${balance}."
+            )
         else:
             break
         if balance == 0:
@@ -116,18 +120,19 @@ def spin(balance):
     print(f"You won on lines: ", *winning_lines)
     return winnings - total_bet
 
+
 def main():
     balance = deposit()
     while True:
         print(f"Current balance is ${balance}")
         if balance != 0:
             answer = input("Press enter to play (q to quit).")
-            if answer == 'q':
+            if answer == "q":
                 break
             balance += spin(balance)
         else:
             break
-    
+
     print(f"You left with ${balance}")
 
 
