@@ -25,7 +25,7 @@ def print_currencies(currencies):
         symbol = currency.get("symbol", "")
         print(f"{_id} - {name} - {symbol}")
 
-def exchange_rate(currency1, currency2, amount=1):
+def exchange_rate(currency1, currency2):
     endpoint = f"v1/latest?api_key={API_KEY}&base={currency1}&symbols={currency2}"
     url = BASE_URL + endpoint
     data = get(url).json()
@@ -40,20 +40,26 @@ def exchange_rate(currency1, currency2, amount=1):
 
 
 def convert(currency1, currency2, amount):
-    #endpoint = f"v1/convert?api_key={API_KEY}&from={currency1}&to={currency2}&amount={amount}"
-    rate = exchange_rate("USD", "INR")
-    if rate is None:
+    endpoint = f"v1/convert?api_key={API_KEY}&from={currency1}&to={currency2}&amount={amount}"
+    url = BASE_URL + endpoint
+    try:
+        data = get(url).json()
+    except:
+        print("Invalid Currencies")
+        return
+   
+    converted_amount = data['value']
+    if converted_amount is None:
         return
     
     try:
-        amount = float(amount)
+        converted_amount = float(converted_amount)
     except:
         print("Invalid amount.")
         return
     
-    converted_amount = rate * amount
     print(f"{amount} {currency1} is equal to {converted_amount} {currency2}")
-
+    
 
 def main():
     currencies = get_currencies()
