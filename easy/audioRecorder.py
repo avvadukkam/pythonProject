@@ -1,117 +1,117 @@
 import tkinter as tk
-import tkinter.ttk as ttk
-import tkinter.filedialog as filedialog
-import speech_recognition as sr
-from pydub import AudioSegment
-
+import pyaudio
+import wave
+import threading
+import time
+from datetime import datetime
 
 class AudioRecorderApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Audio Recorder App")
+    def __init__(self, master):
+        self.master = master
+        self.record_button = tk.Button(self.master, text="Start Recording", command=self.toggle_recording)
+        self.record_button.pack(pady=20)
 
-        self.recording = False
-        self.paused = False
-        self.audio_format = tk.StringVar(value="wav")
+        self.pause_button = tk.Button(self.master, text="Pause Recording", command=self.toggle_pause, state=tk.DISABLED)
+        self.pause_button.pack(pady=10)
 
-        # Create GUI elements
-        self.start_stop_button = ttk.Button(root, text="Start Recording", command=self.start_stop_recording)
-        self.start_stop_button.pack(pady=10)
+        self.duration_label = tk.Label(self.master, text="Duration: 0:00")
+        self.duration_label.pack(pady=10)
 
-        self.pause_resume_button = ttk.Button(root, text="Pause Recording", command=self.pause_resume_recording,
-                                              state=tk.DISABLED)
-        self.pause_resume_button.pack(pady=5)
+        self.is_recording = False
+        self.is_paused = False
+        self.record_thread = None
+        self.start_time = 0
+        self.pause_time = 0
+        self.total_paused_time = 0  # Total time paused
 
-        formats = ["wav", "flac", "aac", "mp3"]
-        self.format_menu = ttk.OptionMenu(root, self.audio_format, *formats)
-        self.format_menu.pack(pady=5)
+        self.audio = pyaudio.PyAudio()
+        self.stream = None
+        self.frames = []
 
-        self.status_label = ttk.Label(root, text="Status: Idle")
-        self.status_label.pack(pady=10)
-
-        # Initialize recognizer and microphone
-        self.recognizer = sr.Recognizer()
-        self.microphone = sr.Microphone()
-
-    def start_stop_recording(self):
-        if not self.recording:
-            self.recording = True
-            self.paused = False
-            self.start_stop_button.config(text="Stop Recording")
-            self.pause_resume_button.config(text="Pause Recording", state=tk.NORMAL)
-            self.status_label.config(text="Status: Recording...")
-
-            try:
-                self.record_audio()
-            except Exception as e:
-                print(f"Error starting recording: {e}")
+    def toggle_recording(self):
+        if not self.is_recording:
+            self.start_recording()
         else:
-            self.recording = False
-            self.start_stop_button.config(text="Start Recording")
-            self.pause_resume_button.config(text="Pause Recording", state=tk.DISABLED)
-            self.status_label.config(text="Status: Stopped")
+            self.stop_recording()
 
-            # Prompt user for file save location
-            self.save_audio()
-
-    def pause_resume_recording(self):
-        if self.paused:
-            self.paused = False
-            self.pause_resume_button.config(text="Pause Recording")
-            self.status_label.config(text="Status: Recording...")
+    def start_recording(self):
+        if not self.is_paused:
+            self.start_time = time.time() - self.total_paused_time  # Start time adjusted to account for total paused time
         else:
-            self.paused = True
-            self.pause_resume_button.config(text="Resume Recording")
-            self.status_label.config(text="Status: Paused")
+            self.start_time += time.time() - self.pause_time  # Resume from where we paused
+
+        self.stream = self.audio.open(format=pyaudio.paInt16, channels=1, rate=44100, input=True,
+                                      frames_per_buffer=1024)
+        self.frames = []
+
+        self.record_button.config(text="Stop Recording")
+        self.pause_button.config(state=tk.NORMAL)
+        self.is_recording = True
+
+        self.update_duration()
+
+        self.record_thread = threading.Thread(target=self.record_audio)
+        self.record_thread.start()
 
     def record_audio(self):
-        with self.microphone as source:
-            while self.recording:
-                try:
-                    if not self.paused:
-                        audio_data = self.recognizer.listen(source)
-                        if self.recording and not self.paused:
-                            # Handle audio data as needed (currently not saving directly here)
-                            pass
-                except Exception as e:
-                    print(f"Error recording audio: {e}")
-                    break
+        while self.is_recording:
+            if not self.is_paused:
+                data = self.stream.read(1024)
+                self.frames.append(data)
+            else:
+                time.sleep(0.1)
 
-    def save_audio(self):
-        try:
-            audio_data = self.recognizer.listen(self.microphone)
-            if audio_data:
-                audio_format = self.audio_format.get()
-                filename = filedialog.asksaveasfilename(defaultextension=f".{audio_format}", filetypes=[
-                    (f"{audio_format.upper()} files", f"*.{audio_format}")])
+    def toggle_pause(self):
+        if not self.is_paused:
+            self.pause_recording()
+        else:
+            self.resume_recording()
 
-                if filename:
-                    if audio_format == "wav":
-                        with open(filename, "wb") as file:
-                            file.write(audio_data.get_wav_data())
-                    elif audio_format == "flac":
-                        with open(filename, "wb") as file:
-                            file.write(audio_data.get_flac_data())
-                    elif audio_format == "aac":
-                        # Convert to AAC using pydub
-                        audio_segment = AudioSegment.from_wav(
-                            sr.AudioData(audio_data.get_wav_data(), self.recognizer.sample_rate,
-                                         self.recognizer.sample_width))
-                        audio_segment.export(filename, format="aac")
-                    elif audio_format == "mp3":
-                        # Convert to MP3 using pydub
-                        audio_segment = AudioSegment.from_wav(
-                            sr.AudioData(audio_data.get_wav_data(), self.recognizer.sample_rate,
-                                         self.recognizer.sample_width))
-                        audio_segment.export(filename, format="mp3")
-        except Exception as e:
-            print(f"Error saving audio: {e}")
+    def pause_recording(self):
+        self.is_paused = True
+        self.pause_button.config(text="Resume Recording")
+        self.pause_time = time.time()
 
-    def run(self):
-        self.root.mainloop()
+    def resume_recording(self):
+        self.is_paused = False
+        self.pause_button.config(text="Pause Recording")
+        self.total_paused_time += time.time() - self.pause_time  # Add paused time to total
+        self.update_duration()
+
+    def stop_recording(self):
+        self.is_recording = False
+        self.stream.stop_stream()
+        self.stream.close()
+        self.audio.terminate()
+
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f"recorded_audio_{current_time}.wav"
+
+        wf = wave.open(filename, 'wb')
+        wf.setnchannels(1)
+        wf.setsampwidth(self.audio.get_sample_size(pyaudio.paInt16))
+        wf.setframerate(44100)
+        wf.writeframes(b''.join(self.frames))
+        wf.close()
+
+        self.record_button.config(text="Start Recording")
+        self.pause_button.config(text="Pause Recording", state=tk.DISABLED)
+        self.duration_label.config(text="Duration: 0:00")
+
+    def update_duration(self):
+        if self.is_recording and not self.is_paused:
+            elapsed_time = time.time() - self.start_time - self.total_paused_time
+            mins = int(elapsed_time // 60)
+            secs = int(elapsed_time % 60)
+            self.duration_label.config(text=f"Duration: {mins}:{secs:02}")
+            self.master.after(1000, self.update_duration)  # Schedule the next update after 1 second
+
+    def mainloop(self):
+        self.master.mainloop()
 
 
 if __name__ == "__main__":
     root = tk.Tk()
+    root.title("Audio Recorder")
     app = AudioRecorderApp(root)
-    app.run()
+    app.mainloop()
