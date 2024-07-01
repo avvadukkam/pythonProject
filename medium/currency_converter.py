@@ -1,9 +1,8 @@
 from requests import get
 from pprint import PrettyPrinter
 import os
-from dotenv import load_dotenv, dotenv_values 
-
-load_dotenv() 
+from dotenv import load_dotenv, dotenv_values
+load_dotenv()
 
 BASE_URL = "https://api.currencybeacon.com/"
 API_KEY = os.getenv("API_KEY")
