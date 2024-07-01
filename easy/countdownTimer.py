@@ -25,27 +25,26 @@ def countdown_timer():
 root = tk.Tk()
 root.title("Countdown Timer")
 
-tk.Label(root, text="Hours:").grid(row=0, column=0)
-tk.Label(root, text="Minutes:").grid(row=1, column=0)
-tk.Label(root, text="Seconds:").grid(row=2, column=0)
+tk.Label(root, text="Set Time (HH:MM:SS)").grid(row=0, column=0, columnspan=3)
 
 hours_var = tk.StringVar(value="0")
 minutes_var = tk.StringVar(value="0")
 seconds_var = tk.StringVar(value="0")
 
-hours = tk.Entry(root, textvariable=hours_var)
-minutes = tk.Entry(root, textvariable=minutes_var)
-seconds = tk.Entry(root, textvariable=seconds_var)
+hours = tk.Entry(root, textvariable=hours_var, width=3)
+minutes = tk.Entry(root, textvariable=minutes_var, width=3)
+seconds = tk.Entry(root, textvariable=seconds_var, width=3)
 
-
-hours.grid(row=0, column=1)
-minutes.grid(row=1, column=1)
-seconds.grid(row=2, column=1)
+hours.grid(row=1, column=0)
+tk.Label(root, text=":").grid(row=1, column=1)
+minutes.grid(row=1, column=2)
+tk.Label(root, text=":").grid(row=1, column=3)
+seconds.grid(row=1, column=4)
 
 start_button = tk.Button(root, text="Start Countdown", command=countdown_timer)
-start_button.grid(row=3, column=1)
+start_button.grid(row=2, column=0, columnspan=5)
 
 time_label = tk.Label(root, font=('Helvetica', 48), text="00:00:00")
-time_label.grid(row=4, column=0, columnspan=2)
+time_label.grid(row=3, column=0, columnspan=5)
 
 root.mainloop()
